@@ -4,6 +4,7 @@ main: me.miko.universalspawn.UniversalSpawn
 authors: [ MIKO ]
 description: A plugin for managing spawn locations in Bukkit servers.
 folia-supported: true
+softdepend: [My_Worlds]
 
 commands:
   spawn:
