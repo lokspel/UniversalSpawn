@@ -1,6 +1,5 @@
 package me.miko.universalspawn;
 
-import com.tcoded.folialib.FoliaLib;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,7 +11,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 
 public class BukkitEvent implements Listener {
     private final UniversalSpawn plugin;
-    final FoliaLib foliaLib = UniversalSpawn.getFoliaLib();
 
     public BukkitEvent(UniversalSpawn plugin) {
         this.plugin = plugin;
@@ -21,8 +19,9 @@ public class BukkitEvent implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (plugin.getConfigManager().TeleportOnJoin()) {
-            Player player = event.getPlayer();
-            foliaLib.getImpl().teleportAsync(player, plugin.getSpawnLocation());
+            FoliaAPI.runTaskLater(plugin, () -> {
+                FoliaAPI.teleportPlayer(plugin, event.getPlayer(), plugin.getSpawnLocation());
+            }, 1L);
         }
     }
 
@@ -34,7 +33,7 @@ public class BukkitEvent implements Listener {
             if (player.getLocation().getBlockY() <= checkHeight) {
                 Location spawnLocation = plugin.getSpawnLocation();
                 if (spawnLocation != null && spawnLocation.getWorld().equals(player.getWorld())) {
-                    foliaLib.getImpl().teleportAsync(player, plugin.getSpawnLocation());
+                    FoliaAPI.teleportPlayer(plugin, player, plugin.getSpawnLocation());
                     event.setCancelled(true);
                 }
             }
@@ -45,10 +44,14 @@ public class BukkitEvent implements Listener {
     public void onDeath(PlayerDeathEvent event) {
         if (plugin.getConfigManager().TeleportOnDeath()) {
             Player player = event.getEntity();
-            foliaLib.getImpl().runAtEntity(player, wrappedTask -> {
-                player.spigot().respawn();
-                foliaLib.getImpl().teleportAsync(player, plugin.getSpawnLocation());
-            });
+
+            FoliaAPI.runTaskForEntity(plugin, event.getEntity(), () -> {
+                try {
+                    event.getEntity().spigot().respawn();
+                } catch (Exception e) {
+                }
+                FoliaAPI.teleportPlayer(plugin, event.getEntity(), plugin.getSpawnLocation());
+            }, 1L);
         }
     }
 }
