@@ -57,10 +57,6 @@
             <id>papermc-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
-        <repository>
-            <id>folialib-repo</id>
-            <url>https://nexuslite.gcnt.net/repos/other/</url>
-        </repository>
     </repositories>
 
     <dependencies>
