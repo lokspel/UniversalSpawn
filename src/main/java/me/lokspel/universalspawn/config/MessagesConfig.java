@@ -1,6 +1,6 @@
-package me.lokspel.spawnauth.config;
+package me.lokspel.universalspawn.config;
 
-import me.lokspel.spawnauth.SpawnAuth;
+import me.lokspel.universalspawn.UniversalSpawn;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.command.CommandSender;
@@ -10,11 +10,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 
 public final class MessagesConfig {
-    private final SpawnAuth plugin;
+    private final UniversalSpawn plugin;
     private final MiniMessage miniMessage;
     private FileConfiguration config;
 
-    public MessagesConfig(SpawnAuth plugin) {
+    public MessagesConfig(UniversalSpawn plugin) {
         this.plugin = plugin;
         this.miniMessage = MiniMessage.miniMessage();
         load();

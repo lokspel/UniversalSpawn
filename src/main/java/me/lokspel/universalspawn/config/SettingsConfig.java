@@ -1,12 +1,12 @@
-package me.lokspel.spawnauth.config;
+package me.lokspel.universalspawn.config;
 
-import me.lokspel.spawnauth.SpawnAuth;
+import me.lokspel.universalspawn.UniversalSpawn;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public final class SettingsConfig {
-    private final SpawnAuth plugin;
+    private final UniversalSpawn plugin;
     private boolean teleportOnJoin;
     private boolean teleportOnRespawn;
     private boolean autoRespawn;
@@ -16,7 +16,7 @@ public final class SettingsConfig {
     private int autoRespawnRetries;
     private long postRespawnTeleportDelayTicks;
 
-    public SettingsConfig(SpawnAuth plugin) {
+    public SettingsConfig(UniversalSpawn plugin) {
         this.plugin = plugin;
     }
 

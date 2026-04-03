@@ -1,13 +1,13 @@
-package me.lokspel.spawnauth.world;
+package me.lokspel.universalspawn.world;
 
-import me.lokspel.spawnauth.SpawnAuth;
+import me.lokspel.universalspawn.UniversalSpawn;
 import org.bukkit.Location;
 
 public final class SpawnLocation {
-    private final SpawnAuth plugin;
+    private final UniversalSpawn plugin;
     private Location location;
 
-    public SpawnLocation(SpawnAuth plugin) {
+    public SpawnLocation(UniversalSpawn plugin) {
         this.plugin = plugin;
     }
 

@@ -1,6 +1,6 @@
 name: UniversalSpawn
 version: '${project.version}'
-main: me.lokspel.spawnauth.SpawnAuth
+main: me.lokspel.universalspawn.UniversalSpawn
 authors: [ lokspel ]
 description: A plugin for managing spawn locations in Bukkit servers.
 folia-supported: true

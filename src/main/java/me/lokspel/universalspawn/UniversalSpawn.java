@@ -1,18 +1,18 @@
-package me.lokspel.spawnauth;
+package me.lokspel.universalspawn;
 
-import me.lokspel.spawnauth.config.MessagesConfig;
-import me.lokspel.spawnauth.config.SettingsConfig;
-import me.lokspel.spawnauth.commands.SpawnCommand;
-import me.lokspel.spawnauth.events.OnPlayerDeathEvent;
-import me.lokspel.spawnauth.events.OnPlayerJoinEvent;
-import me.lokspel.spawnauth.events.OnPlayerMoveEvent;
-import me.lokspel.spawnauth.events.OnPlayerRespawnEvent;
-import me.lokspel.spawnauth.utils.FoliaAPI;
-import me.lokspel.spawnauth.world.SpawnLocation;
+import me.lokspel.universalspawn.config.MessagesConfig;
+import me.lokspel.universalspawn.config.SettingsConfig;
+import me.lokspel.universalspawn.commands.SpawnCommand;
+import me.lokspel.universalspawn.events.OnPlayerDeathEvent;
+import me.lokspel.universalspawn.events.OnPlayerJoinEvent;
+import me.lokspel.universalspawn.events.OnPlayerMoveEvent;
+import me.lokspel.universalspawn.events.OnPlayerRespawnEvent;
+import me.lokspel.universalspawn.utils.FoliaAPI;
+import me.lokspel.universalspawn.world.SpawnLocation;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class SpawnAuth extends JavaPlugin {
-    private static SpawnAuth instance;
+public final class UniversalSpawn extends JavaPlugin {
+    private static UniversalSpawn instance;
 
     private SettingsConfig settingsConfig;
     private MessagesConfig messagesConfig;
@@ -46,7 +46,7 @@ public final class SpawnAuth extends JavaPlugin {
         instance = null;
     }
 
-    public static SpawnAuth getInstance() {
+    public static UniversalSpawn getInstance() {
         return instance;
     }
 

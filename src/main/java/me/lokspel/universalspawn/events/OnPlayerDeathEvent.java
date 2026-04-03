@@ -1,7 +1,7 @@
-package me.lokspel.spawnauth.events;
+package me.lokspel.universalspawn.events;
 
-import me.lokspel.spawnauth.SpawnAuth;
-import me.lokspel.spawnauth.utils.FoliaAPI;
+import me.lokspel.universalspawn.UniversalSpawn;
+import me.lokspel.universalspawn.utils.FoliaAPI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -9,9 +9,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
 public final class OnPlayerDeathEvent implements Listener {
-    private final SpawnAuth plugin;
+    private final UniversalSpawn plugin;
 
-    public OnPlayerDeathEvent(SpawnAuth plugin) {
+    public OnPlayerDeathEvent(UniversalSpawn plugin) {
         this.plugin = plugin;
     }
 

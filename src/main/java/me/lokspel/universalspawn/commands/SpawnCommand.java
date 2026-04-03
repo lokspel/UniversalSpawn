@@ -1,16 +1,16 @@
-package me.lokspel.spawnauth.commands;
+package me.lokspel.universalspawn.commands;
 
-import me.lokspel.spawnauth.SpawnAuth;
-import me.lokspel.spawnauth.utils.FoliaAPI;
+import me.lokspel.universalspawn.UniversalSpawn;
+import me.lokspel.universalspawn.utils.FoliaAPI;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public final class SpawnCommand implements CommandExecutor {
-    private final SpawnAuth plugin;
+    private final UniversalSpawn plugin;
 
-    public SpawnCommand(SpawnAuth plugin) {
+    public SpawnCommand(UniversalSpawn plugin) {
         this.plugin = plugin;
     }
 

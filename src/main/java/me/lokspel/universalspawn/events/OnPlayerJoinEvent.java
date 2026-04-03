@@ -1,16 +1,16 @@
-package me.lokspel.spawnauth.events;
+package me.lokspel.universalspawn.events;
 
-import me.lokspel.spawnauth.SpawnAuth;
-import me.lokspel.spawnauth.utils.FoliaAPI;
+import me.lokspel.universalspawn.UniversalSpawn;
+import me.lokspel.universalspawn.utils.FoliaAPI;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 public final class OnPlayerJoinEvent implements Listener {
-    private final SpawnAuth plugin;
+    private final UniversalSpawn plugin;
 
-    public OnPlayerJoinEvent(SpawnAuth plugin) {
+    public OnPlayerJoinEvent(UniversalSpawn plugin) {
         this.plugin = plugin;
     }
 

@@ -1,6 +1,6 @@
-package me.lokspel.spawnauth.utils;
+package me.lokspel.universalspawn.utils;
 
-import me.lokspel.spawnauth.SpawnAuth;
+import me.lokspel.universalspawn.UniversalSpawn;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -139,7 +139,7 @@ public final class FoliaAPI {
                 return method.invoke(target, args);
             }
         } catch (Exception exception) {
-            SpawnAuth instance = SpawnAuth.getInstance();
+            UniversalSpawn instance = UniversalSpawn.getInstance();
             if (instance != null) {
                 instance.getLogger().log(Level.SEVERE,
                         "A reflective Folia scheduler call failed. The running server API is not compatible.",
