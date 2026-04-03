@@ -1,0 +1,6 @@
+only-player: "<red>Only players can use this command.</red>"
+no-permission: "<red>You do not have permission to use this command.</red>"
+no-spawn-permission: "<red>You do not have permission to use /spawn.</red>"
+spawn-set: "<green>Spawn location has been set.</green>"
+spawn-teleported: "<green>You were teleported to spawn.</green>"
+spawn-missing: "<red>Spawn location is not configured.</red>"

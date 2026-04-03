@@ -1,7 +1,7 @@
 name: UniversalSpawn
 version: '${project.version}'
-main: me.miko.universalspawn.UniversalSpawn
-authors: [ MIKO ]
+main: me.lokspel.spawnauth.SpawnAuth
+authors: [ lokspel ]
 description: A plugin for managing spawn locations in Bukkit servers.
 folia-supported: true
 softdepend: [My_Worlds]
@@ -9,7 +9,11 @@ softdepend: [My_Worlds]
 commands:
   spawn:
     description: Teleport to the spawn location.
+    usage: /spawn [set]
 permissions:
+  universalspawn.spawn.use:
+    description: Allows players to use /spawn.
+    default: true
   universalspawn.spawn.set:
     description: Allows players to set the spawn location.
     default: op
