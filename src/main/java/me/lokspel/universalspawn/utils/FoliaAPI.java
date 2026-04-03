@@ -146,7 +146,7 @@ public final class FoliaAPI {
                         exception);
             } else {
                 Bukkit.getLogger().log(Level.SEVERE,
-                        "[SpawnAuth] A reflective Folia scheduler call failed. The running server API is not compatible.",
+                        "[UniversalSpawn] A reflective Folia scheduler call failed. The running server API is not compatible.",
                         exception);
             }
         }
