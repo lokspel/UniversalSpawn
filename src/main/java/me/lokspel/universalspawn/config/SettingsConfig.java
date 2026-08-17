@@ -80,8 +80,8 @@ public final class SettingsConfig {
         return teleportOnJoin;
     }
 
-    public boolean shouldTeleportOnRespawn() {
-        return teleportOnRespawn;
+    public boolean shouldSkipTeleportOnRespawn() {
+        return !teleportOnRespawn;
     }
 
     public boolean shouldAutoRespawn() {

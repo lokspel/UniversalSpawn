@@ -21,7 +21,6 @@ public final class UniversalSpawn extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
-        FoliaAPI.init(this);
 
         saveDefaultConfig();
         reloadConfig();

@@ -43,8 +43,8 @@ public final class SpawnCommand implements CommandExecutor {
             return true;
         }
 
-        FoliaAPI.teleportPlayer(player, plugin.getSpawnLocation().getLocation(), true,
-                () -> plugin.getMessagesConfig().send(player, "spawn-teleported"));
+        FoliaAPI.teleportPlayer(player, plugin.getSpawnLocation().getLocation(), true)
+                .whenComplete((ok, ex) -> plugin.getMessagesConfig().send(player, "spawn-teleported"));
         return true;
     }
 }

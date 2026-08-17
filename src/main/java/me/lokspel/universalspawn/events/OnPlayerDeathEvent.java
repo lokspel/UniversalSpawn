@@ -17,7 +17,7 @@ public final class OnPlayerDeathEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        if (!plugin.getSettingsConfig().shouldTeleportOnRespawn()) {
+        if (plugin.getSettingsConfig().shouldSkipTeleportOnRespawn()) {
             return;
         }
 
@@ -50,6 +50,7 @@ public final class OnPlayerDeathEvent implements Listener {
             if (player.isDead() && retriesLeft > 0) {
                 attemptRespawn(player, retriesLeft - 1);
             }
+        }, () -> {
         }, plugin.getSettingsConfig().getAutoRespawnDelayTicks());
     }
 }

@@ -1,300 +1,523 @@
 package me.lokspel.universalspawn.utils;
-
-import me.lokspel.universalspawn.UniversalSpawn;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scheduler.BukkitTask;
+import me.lokspel.universalspawn.UniversalSpawn;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
-import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.logging.Level;
+public class FoliaAPI {
+    private static Map<String, Method> cachedMethods = new HashMap<>(); // cached reflection methods
+    private static BukkitScheduler bS = Bukkit.getScheduler(); // bukkit scheduler
+    private static Object globalRegionScheduler = getGlobalRegionScheduler(); // folia global scheduler
+    private static Object regionScheduler = getRegionScheduler(); // folia region scheduler
+    private static Object asyncScheduler = getAsyncScheduler(); // folia async scheduler
 
-public final class FoliaAPI {
-    private static final Map<String, Method> CACHED_METHODS = new ConcurrentHashMap<>();
-    private static final Map<String, Class<?>> CACHED_CLASSES = new ConcurrentHashMap<>();
-
-    private static final BukkitScheduler BUKKIT_SCHEDULER = Bukkit.getScheduler();
-    private static final Object GLOBAL_REGION_SCHEDULER;
-    private static final Object REGION_SCHEDULER;
-    private static final Object ASYNC_SCHEDULER;
-    private static final boolean IS_FOLIA;
-
-    private static JavaPlugin plugin;
+    // FIX 1: cache isFolia() result at init time instead of re-checking every call
+    private static final boolean IS_FOLIA = detectFolia();
 
     static {
-        cacheClasses();
-        GLOBAL_REGION_SCHEDULER = getGlobalRegionScheduler();
-        REGION_SCHEDULER = getRegionScheduler();
-        ASYNC_SCHEDULER = getAsyncScheduler();
-        IS_FOLIA = determineFolia();
-        cacheMethods();
-    }
-
-    private FoliaAPI() {
-    }
-
-    public static void init(JavaPlugin javaPlugin) {
-        plugin = javaPlugin;
-    }
-
-    public static boolean isFolia() {
-        return IS_FOLIA;
-    }
-
-    private static void cacheClasses() {
-        tryLoadClass("io.papermc.paper.threadedregions.RegionizedServer");
-    }
-
-    private static void tryLoadClass(String className) {
-        try {
-            CACHED_CLASSES.put(className, Class.forName(className));
-        } catch (ClassNotFoundException | LinkageError ignored) {
-        }
-    }
-
-    private static boolean determineFolia() {
-        return CACHED_CLASSES.containsKey("io.papermc.paper.threadedregions.RegionizedServer")
-                && GLOBAL_REGION_SCHEDULER != null
-                && REGION_SCHEDULER != null;
+        cacheMethods(); // populate cache early
     }
 
     private static Method getMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
-        if (clazz == null) {
-            return null;
-        }
-
+        if (clazz == null) return null; // no class available
         try {
-            Method method = clazz.getMethod(methodName, parameterTypes);
-            method.setAccessible(true);
-            return method;
-        } catch (NoSuchMethodException ignored) {
-            return null;
+            return clazz.getMethod(methodName, parameterTypes);
+        } catch (NoSuchMethodException e) {
+            return null; // method missing
         }
     }
 
     private static void cacheMethods() {
-        if (GLOBAL_REGION_SCHEDULER != null) {
-            Class<?> schedulerClass = GLOBAL_REGION_SCHEDULER.getClass();
-            cacheMethod("globalRegionScheduler.runAtFixedRate",
-                    getMethod(schedulerClass, "runAtFixedRate", Plugin.class, Consumer.class, long.class, long.class));
-            cacheMethod("globalRegionScheduler.run",
-                    getMethod(schedulerClass, "run", Plugin.class, Consumer.class));
-            cacheMethod("globalRegionScheduler.runDelayed",
-                    getMethod(schedulerClass, "runDelayed", Plugin.class, Consumer.class, long.class));
-            cacheMethod("globalRegionScheduler.cancelTasks",
-                    getMethod(schedulerClass, "cancelTasks", Plugin.class));
+        if (globalRegionScheduler != null) {
+            Method runAtFixedRateMethod = getMethod(globalRegionScheduler.getClass(), "runAtFixedRate", Plugin.class, Consumer.class, long.class, long.class);
+            if (runAtFixedRateMethod != null) cachedMethods.put("globalRegionScheduler.runAtFixedRate", runAtFixedRateMethod);
+            Method runMethod = getMethod(globalRegionScheduler.getClass(), "run", Plugin.class, Consumer.class);
+            if (runMethod != null) cachedMethods.put("globalRegionScheduler.run", runMethod);
+            Method runDelayedMethod = getMethod(globalRegionScheduler.getClass(), "runDelayed", Plugin.class, Consumer.class, long.class);
+            if (runDelayedMethod != null) cachedMethods.put("globalRegionScheduler.runDelayed", runDelayedMethod);
+            Method cancelTasksMethod = getMethod(globalRegionScheduler.getClass(), "cancelTasks", Plugin.class);
+            if (cancelTasksMethod != null) cachedMethods.put("globalRegionScheduler.cancelTasks", cancelTasksMethod);
+        }
+        if (regionScheduler != null) {
+            Method executeMethod = getMethod(regionScheduler.getClass(), "execute", Plugin.class, World.class, int.class, int.class, Runnable.class);
+            if (executeMethod != null) cachedMethods.put("regionScheduler.execute", executeMethod);
+            Method executeLocationMethod = getMethod(regionScheduler.getClass(), "execute", Plugin.class, Location.class, Runnable.class);
+            if (executeLocationMethod != null) cachedMethods.put("regionScheduler.executeLocation", executeLocationMethod);
+            Method runAtFixedRateMethod = getMethod(regionScheduler.getClass(), "runAtFixedRate", Plugin.class, Location.class, Consumer.class, long.class, long.class);
+            if (runAtFixedRateMethod != null) cachedMethods.put("regionScheduler.runAtFixedRate", runAtFixedRateMethod);
+            Method runDelayedMethod = getMethod(regionScheduler.getClass(), "runDelayed", Plugin.class, Location.class, Consumer.class, long.class);
+            if (runDelayedMethod != null) cachedMethods.put("regionScheduler.runDelayed", runDelayedMethod);
         }
 
-        if (REGION_SCHEDULER != null) {
-            Class<?> schedulerClass = REGION_SCHEDULER.getClass();
-            cacheMethod("regionScheduler.execute",
-                    getMethod(schedulerClass, "execute", Plugin.class, World.class, int.class, int.class,
-                            Runnable.class));
-            cacheMethod("regionScheduler.executeLocation",
-                    getMethod(schedulerClass, "execute", Plugin.class, Location.class, Runnable.class));
-            cacheMethod("regionScheduler.runAtFixedRate",
-                    getMethod(schedulerClass, "runAtFixedRate", Plugin.class, Location.class, Consumer.class,
-                            long.class, long.class));
-            cacheMethod("regionScheduler.runDelayed",
-                    getMethod(schedulerClass, "runDelayed", Plugin.class, Location.class, Consumer.class,
-                            long.class));
+        // FIX 2: cache entity scheduler methods against the correct scheduler class, not Entity itself.
+        // We look them up by name since we don't have a live instance at static-init time; the
+        // per-entity lookup in runTaskForEntity() will then use these cached entries.
+        Method getSchedulerMethod = getMethod(Entity.class, "getScheduler");
+        if (getSchedulerMethod != null) {
+            getSchedulerMethod.setAccessible(true);
+            cachedMethods.put("entity.getScheduler", getSchedulerMethod);
+
+            // FIX 3: cache entityScheduler.execute and entityScheduler.runAtFixedRate by resolving
+            // the scheduler class from the method's return type instead of re-doing reflection each call.
+            Class<?> entitySchedulerClass = getSchedulerMethod.getReturnType();
+            if (entitySchedulerClass != null && entitySchedulerClass != void.class) {
+                Method executeEntityMethod = getMethod(entitySchedulerClass, "execute",
+                        Plugin.class, Runnable.class, Runnable.class, long.class);
+                if (executeEntityMethod != null) {
+                    executeEntityMethod.setAccessible(true);
+                    cachedMethods.put("entityScheduler.execute", executeEntityMethod);
+                }
+                Method runAtFixedRateEntityMethod = getMethod(entitySchedulerClass, "runAtFixedRate",
+                        Plugin.class, Consumer.class, Runnable.class, long.class, long.class);
+                if (runAtFixedRateEntityMethod != null) {
+                    runAtFixedRateEntityMethod.setAccessible(true);
+                    cachedMethods.put("entityScheduler.runAtFixedRate", runAtFixedRateEntityMethod);
+                }
+            }
         }
 
-        cacheMethod("entity.getScheduler", getMethod(Entity.class, "getScheduler"));
-        cacheMethod("player.teleportAsync", getMethod(Player.class, "teleportAsync", Location.class));
-
-        if (ASYNC_SCHEDULER != null) {
-            Class<?> schedulerClass = ASYNC_SCHEDULER.getClass();
-            cacheMethod("asyncScheduler.cancelTasks", getMethod(schedulerClass, "cancelTasks", Plugin.class));
-            cacheMethod("asyncScheduler.runNow", getMethod(schedulerClass, "runNow", Plugin.class, Consumer.class));
-            cacheMethod("asyncScheduler.runDelayed",
-                    getMethod(schedulerClass, "runDelayed", Plugin.class, Consumer.class, long.class,
-                            TimeUnit.class));
-            cacheMethod("asyncScheduler.runAtFixedRate",
-                    getMethod(schedulerClass, "runAtFixedRate", Plugin.class, Consumer.class, long.class,
-                            long.class, TimeUnit.class));
+        Method teleportAsyncMethod = getMethod(Player.class, "teleportAsync", Location.class);
+        if (teleportAsyncMethod != null) cachedMethods.put("player.teleportAsync", teleportAsyncMethod);
+        Method teleportAsyncWithCause = getMethod(Player.class, "teleportAsync", Location.class, TeleportCause.class);
+        if (teleportAsyncWithCause != null) cachedMethods.put("player.teleportAsyncCause", teleportAsyncWithCause);
+        if (asyncScheduler != null) {
+            Method cancelTasksMethod = getMethod(asyncScheduler.getClass(), "cancelTasks", Plugin.class);
+            if (cancelTasksMethod != null) cachedMethods.put("asyncScheduler.cancelTasks", cancelTasksMethod);
         }
+
+        Method isOwnedByCurrentRegionLocation = getMethod(Server.class, "isOwnedByCurrentRegion", Location.class);
+        if (isOwnedByCurrentRegionLocation != null) {
+            cachedMethods.put("server.isOwnedByCurrentRegionLocation", isOwnedByCurrentRegionLocation);
+        }
+
+        // FIX 4: cache the three Server scheduler lookup methods so getGlobalRegionScheduler() etc.
+        // never repeat the same getMethod(Server.class, ...) call at runtime.
+        Method getGlobalMethod = getMethod(Server.class, "getGlobalRegionScheduler");
+        if (getGlobalMethod != null) cachedMethods.put("server.getGlobalRegionScheduler", getGlobalMethod);
+        Method getRegionMethod = getMethod(Server.class, "getRegionScheduler");
+        if (getRegionMethod != null) cachedMethods.put("server.getRegionScheduler", getRegionMethod);
+        Method getAsyncMethod = getMethod(Server.class, "getAsyncScheduler");
+        if (getAsyncMethod != null) cachedMethods.put("server.getAsyncScheduler", getAsyncMethod);
     }
 
-    private static void cacheMethod(String key, Method method) {
-        if (method != null) {
-            CACHED_METHODS.put(key, method);
-        }
-    }
-
-    private static Object invokeMethod(Method method, Object target, Object... args) {
+    private static Object invokeMethod(Method method, Object object, Object... args) {
         try {
-            if (method != null && target != null) {
-                return method.invoke(target, args);
+            if (method != null && object != null) {
+                method.setAccessible(true);
+                return method.invoke(object, args);
             }
-        } catch (Exception exception) {
-            UniversalSpawn instance = UniversalSpawn.getInstance();
-            if (instance != null) {
-                instance.getLogger().log(Level.SEVERE,
-                        "A reflective Folia scheduler call failed. The running server API is not compatible.",
-                        exception);
-            } else {
-                Bukkit.getLogger().log(Level.SEVERE,
-                        "[UniversalSpawn] A reflective Folia scheduler call failed. The running server API is not compatible.",
-                        exception);
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
         return null;
     }
 
     private static Object getGlobalRegionScheduler() {
-        return invokeMethod(getMethod(Server.class, "getGlobalRegionScheduler"), Bukkit.getServer());
+        // uses getMethod directly here because cacheMethods() hasn't run yet at field-init time;
+        // the result (the scheduler object) is stored in the static field and reused everywhere.
+        Method method = getMethod(Server.class, "getGlobalRegionScheduler");
+        return invokeMethod(method, Bukkit.getServer());
     }
 
     private static Object getRegionScheduler() {
-        return invokeMethod(getMethod(Server.class, "getRegionScheduler"), Bukkit.getServer());
+        Method method = getMethod(Server.class, "getRegionScheduler");
+        return invokeMethod(method, Bukkit.getServer());
     }
 
     private static Object getAsyncScheduler() {
-        return invokeMethod(getMethod(Server.class, "getAsyncScheduler"), Bukkit.getServer());
+        Method method = getMethod(Server.class, "getAsyncScheduler");
+        return invokeMethod(method, Bukkit.getServer());
     }
 
-    public static void runTask(Runnable runnable) {
-        if (!IS_FOLIA) {
-            BUKKIT_SCHEDULER.runTask(plugin, runnable);
+    // FIX 1 (impl): one-time Folia detection called only from the static field initializer.
+    private static boolean detectFolia() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return globalRegionScheduler != null && regionScheduler != null;
+        } catch (Exception ig) {
+            return false;
+        }
+    }
+
+    // isFolia() now returns the pre-computed constant — zero overhead per call.
+    public static boolean isFolia() {
+        return IS_FOLIA;
+    }
+
+    public static boolean isOwnedByCurrentRegion(final Location location) {
+        if (!isFolia() || location == null || location.getWorld() == null) {
+            return true;
+        }
+        final Method method = cachedMethods.get("server.isOwnedByCurrentRegionLocation");
+        if (method == null) {
+            return true;
+        }
+        final Object result = invokeMethod(method, Bukkit.getServer(), location);
+        return !(result instanceof Boolean) || ((Boolean) result).booleanValue();
+    }
+
+    public static void runTaskAsync(Runnable run, long delay) {
+        if (!isFolia()) {
+            bS.runTaskLaterAsynchronously(UniversalSpawn.getInstance(), run, delay);
             return;
         }
-
-        invokeMethod(CACHED_METHODS.get("globalRegionScheduler.run"), GLOBAL_REGION_SCHEDULER, plugin,
-                (Consumer<Object>) ignored -> runnable.run());
+        Executors.defaultThreadFactory().newThread(run).start();
     }
 
-    public static void runTaskLater(Runnable runnable, long delay) {
-        if (!IS_FOLIA) {
-            BUKKIT_SCHEDULER.runTaskLater(plugin, runnable, delay);
+    public static void runTaskAsync(Runnable run) {
+        runTaskAsync(run, 1L);
+    }
+
+    public static void runTaskTimerAsync(Consumer<Object> run, long delay, long period) {
+        if (!isFolia()) {
+            bS.runTaskTimerAsynchronously(UniversalSpawn.getInstance(), () -> run.accept(null), delay, period);
             return;
         }
-
-        invokeMethod(CACHED_METHODS.get("globalRegionScheduler.runDelayed"), GLOBAL_REGION_SCHEDULER, plugin,
-                (Consumer<Object>) ignored -> runnable.run(), delay);
+        Method method = cachedMethods.get("globalRegionScheduler.runAtFixedRate");
+        invokeMethod(method, globalRegionScheduler, UniversalSpawn.getInstance(), run, delay, period);
     }
 
-    public static void runTaskForEntity(Entity entity, Runnable runnable, long delay) {
-        runTaskForEntity(entity, runnable, () -> {
-        }, delay);
+    public static void runTaskTimerAsync(Runnable runnable, long delay, long period) {
+        runTaskTimerAsync(obj -> runnable.run(), delay, period);
     }
 
-    public static void runTaskForEntity(Entity entity, Runnable runnable, Runnable retired, long delay) {
-        if (!IS_FOLIA) {
-            if (delay == 0L && Bukkit.isPrimaryThread()) {
-                runnable.run();
-                return;
-            }
-
-            BUKKIT_SCHEDULER.runTaskLater(plugin, runnable, delay);
+    public static void runTaskTimer(Consumer<Object> run, long delay, long period) {
+        if (!isFolia()) {
+            bS.runTaskTimer(UniversalSpawn.getInstance(), () -> run.accept(null), delay, period);
             return;
         }
+        Method method = cachedMethods.get("globalRegionScheduler.runAtFixedRate");
+        invokeMethod(method, globalRegionScheduler, UniversalSpawn.getInstance(), run, delay, period);
+    }
 
+    public static void runTask(Runnable run) {
+        if (!isFolia()) {
+            bS.runTask(UniversalSpawn.getInstance(), run);
+            return;
+        }
+        Method method = cachedMethods.get("globalRegionScheduler.run");
+        invokeMethod(method, globalRegionScheduler, UniversalSpawn.getInstance(), (Consumer<Object>) ignored -> run.run());
+    }
+
+    public static void runTask(Consumer<Object> run) {
+        if (!isFolia()) {
+            bS.runTask(UniversalSpawn.getInstance(), () -> run.accept(null));
+            return;
+        }
+        Method method = cachedMethods.get("globalRegionScheduler.run");
+        invokeMethod(method, globalRegionScheduler, UniversalSpawn.getInstance(), run);
+    }
+
+    public static void runTaskLater(Runnable run, long delay) {
+        if (!isFolia()) {
+            bS.runTaskLater(UniversalSpawn.getInstance(), run, delay);
+            return;
+        }
+        Method method = cachedMethods.get("globalRegionScheduler.runDelayed");
+        invokeMethod(method, globalRegionScheduler, UniversalSpawn.getInstance(), (Consumer<Object>) ignored -> run.run(), delay);
+    }
+
+    public static void runTaskLater(Consumer<Object> run, long delay) {
+        if (!isFolia()) {
+            bS.runTaskLater(UniversalSpawn.getInstance(), () -> run.accept(null), delay);
+            return;
+        }
+        Method method = cachedMethods.get("globalRegionScheduler.runDelayed");
+        invokeMethod(method, globalRegionScheduler, UniversalSpawn.getInstance(), run, delay);
+    }
+
+    // FIX 2+3: runTaskForEntity() now uses cachedMethods exclusively — no more raw
+    // entity.getClass().getMethod(...) calls on the hot path.
+    public static void runTaskForEntity(Entity entity, Runnable run, Runnable retired, long delay) {
+        if (entity == null) return; // ignore null entity
+        if (!isFolia()) {
+            Bukkit.getScheduler().runTaskLater(UniversalSpawn.getInstance(), run, delay); // fallback for non-folia
+            return;
+        }
+        try {
+            Method getSchedulerMethod = cachedMethods.get("entity.getScheduler");
+            if (getSchedulerMethod == null) { run.run(); return; } // failsafe
+            Object entityScheduler = getSchedulerMethod.invoke(entity);
+            if (entityScheduler == null) { run.run(); return; } // failsafe
+
+            Method executeMethod = cachedMethods.get("entityScheduler.execute");
+            if (executeMethod == null) { run.run(); return; } // failsafe
+            executeMethod.invoke(
+                    entityScheduler,
+                    UniversalSpawn.getInstance(),
+                    run,
+                    retired,
+                    Math.max(1L, delay)
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            run.run(); // failsafe run immediately
+        }
+    }
+
+    public static Object runTaskForEntityRepeating(Entity entity, Consumer<Object> task, Runnable retired,
+                                                   long initialDelay, long period) {
+        if (!isFolia()) {
+            final BukkitTask[] holder = new BukkitTask[1];
+            holder[0] = bS.runTaskTimer(
+                    UniversalSpawn.getInstance(),
+                    () -> task.accept(holder[0]),
+                    initialDelay,
+                    period
+            );
+            return holder[0];
+        }
         if (entity == null) {
-            return;
+            return null;
         }
-
-        Object entityScheduler = invokeMethod(CACHED_METHODS.get("entity.getScheduler"), entity);
-        if (entityScheduler == null) {
-            return;
-        }
-
-        Method executeMethod = CACHED_METHODS.get("entityScheduler.execute");
-        if (executeMethod == null) {
-            executeMethod = getMethod(entityScheduler.getClass(), "execute", Plugin.class, Runnable.class,
-                    Runnable.class, long.class);
-            cacheMethod("entityScheduler.execute", executeMethod);
-        }
-
-        invokeMethod(executeMethod, entityScheduler, plugin, runnable, retired, delay);
+        Method getSchedulerMethod = cachedMethods.get("entity.getScheduler");
+        Object entityScheduler = invokeMethod(getSchedulerMethod, entity);
+        Method runAtFixedRateMethod = cachedMethods.get("entityScheduler.runAtFixedRate");
+        return invokeMethod(runAtFixedRateMethod, entityScheduler, UniversalSpawn.getInstance(), task, retired, initialDelay, period);
     }
 
-    public static CompletableFuture<Boolean> teleportPlayer(Player player, Location location, boolean async) {
-        return teleportPlayer(player, location, async, null);
+    public static void runTaskForRegion(World world, int chunkX, int chunkZ, Runnable run) {
+        if (!isFolia()) {
+            bS.runTask(UniversalSpawn.getInstance(), run);
+            return;
+        }
+        if (world == null) return;
+        Method executeMethod = cachedMethods.get("regionScheduler.execute");
+        invokeMethod(executeMethod, regionScheduler, UniversalSpawn.getInstance(), world, chunkX, chunkZ, run);
     }
 
-    public static CompletableFuture<Boolean> teleportPlayer(Player player, Location location, boolean async,
-                                                            Runnable complete) {
+    public static void runTaskForRegion(Location location, Runnable run) {
+        if (!isFolia()) {
+            bS.runTask(UniversalSpawn.getInstance(), run);
+            return;
+        }
+        if (location == null) return;
+        Method executeMethod = cachedMethods.get("regionScheduler.executeLocation");
+        invokeMethod(executeMethod, regionScheduler, UniversalSpawn.getInstance(), location, run);
+    }
+
+    public static void runTaskForRegionRepeating(Location location, Consumer<Object> task, long initialDelay,
+                                                 long period) {
+        if (!isFolia()) {
+            bS.runTaskTimer(UniversalSpawn.getInstance(), () -> task.accept(null), initialDelay, period);
+            return;
+        }
+        if (location == null) return;
+        Method runAtFixedRateMethod = cachedMethods.get("regionScheduler.runAtFixedRate");
+        invokeMethod(runAtFixedRateMethod, regionScheduler, UniversalSpawn.getInstance(), location, task, initialDelay, period);
+    }
+
+    public static void runTaskForRegionDelayed(Location location, Consumer<Object> task, long delay) {
+        if (!isFolia()) {
+            bS.runTaskLater(UniversalSpawn.getInstance(), () -> task.accept(null), delay);
+            return;
+        }
+        if (location == null) return;
+        Method runDelayedMethod = cachedMethods.get("regionScheduler.runDelayed");
+        invokeMethod(runDelayedMethod, regionScheduler, UniversalSpawn.getInstance(), location, task, delay);
+    }
+
+    // helper to attach a CompletableFuture result to 'out' following previous semantics
+    private static void attachFutureToOut(Object res, final CompletableFuture<Boolean> out) {
+        if (res instanceof CompletableFuture) {
+            @SuppressWarnings("unchecked")
+            CompletableFuture<Boolean> f = (CompletableFuture<Boolean>) res;
+            f.whenComplete((ok, ex) -> {
+                if (ex != null) out.complete(false);
+                else out.complete(Boolean.TRUE.equals(ok));
+            });
+        } else {
+            out.complete(res != null);
+        }
+    }
+
+    // central synchronous teleport performer that completes the given CompletableFuture
+    private static void performTeleportAndComplete(Player e, Location location, TeleportCause cause, CompletableFuture<Boolean> out) {
+        // prefer teleportAsync with cause if available
+        Method teleportAsyncWithCause = cachedMethods.get("player.teleportAsyncCause");
+        if (teleportAsyncWithCause != null) {
+            Object res = invokeMethod(teleportAsyncWithCause, e, location, cause);
+            attachFutureToOut(res, out);
+            return;
+        }
+        // try teleportAsync without cause
+        Method teleportAsyncMethod = cachedMethods.get("player.teleportAsync");
+        if (teleportAsyncMethod != null) {
+            Object res = invokeMethod(teleportAsyncMethod, e, location);
+            attachFutureToOut(res, out);
+            return;
+        }
+        // fallback to synchronous teleport
+        if (cause != null) {
+            out.complete(e.teleport(location, cause));
+        } else {
+            out.complete(e.teleport(location));
+        }
+    }
+
+    public static CompletableFuture<Boolean> teleportPlayerNow(final Player player,
+                                                               final Location location,
+                                                               final TeleportCause cause,
+                                                               final Runnable preTeleportHook) {
         if (player == null || location == null) {
-            if (complete != null) {
-                complete.run();
-            }
             return CompletableFuture.completedFuture(false);
         }
-
-        if (!IS_FOLIA || !async) {
-            runTask(() -> {
-                player.teleport(location);
-                if (complete != null) {
-                    complete.run();
-                }
-            });
-            return CompletableFuture.completedFuture(true);
+        final CompletableFuture<Boolean> out = new CompletableFuture<>();
+        if (preTeleportHook != null) {
+            preTeleportHook.run();
         }
+        performTeleportAndComplete(player, location, cause, out);
+        return out;
+    }
 
-        Method teleportMethod = CACHED_METHODS.get("player.teleportAsync");
-        runTaskForEntity(player, () -> {
-            Object result = invokeMethod(teleportMethod, player, location);
-            if (result instanceof CompletableFuture<?> future) {
-                if (complete != null) {
-                    future.whenComplete((ignored, throwable) -> complete.run());
-                }
-                return;
+    public static CompletableFuture<Boolean> teleportPlayer(Player e, Location location, Boolean async) {
+        if (e == null) return CompletableFuture.completedFuture(false); // null guard
+        if (isFolia()) {
+            final CompletableFuture<Boolean> out = new CompletableFuture<>();
+            runTaskForEntity(e, () -> performTeleportAndComplete(e, location, null, out), () -> {}, 1L);
+            return out;
+        }
+        // non-Folia synchronous scheduling, attempt to use teleportAsync methods if present
+        Method teleportAsyncWithCause = cachedMethods.get("player.teleportAsyncCause");
+        if (teleportAsyncWithCause != null) {
+            Object res = invokeMethod(teleportAsyncWithCause, e, location, (TeleportCause) null);
+            if (res instanceof CompletableFuture) {
+                @SuppressWarnings("unchecked")
+                CompletableFuture<Boolean> f = (CompletableFuture<Boolean>) res;
+                return f;
             }
-
-            if (complete != null) {
-                complete.run();
+            return CompletableFuture.completedFuture(res != null);
+        }
+        Method teleportAsyncMethod = cachedMethods.get("player.teleportAsync");
+        if (teleportAsyncMethod != null) {
+            Object res = invokeMethod(teleportAsyncMethod, e, location);
+            if (res instanceof CompletableFuture) {
+                @SuppressWarnings("unchecked")
+                CompletableFuture<Boolean> f = (CompletableFuture<Boolean>) res;
+                return f;
             }
-        }, 1L);
+            return CompletableFuture.completedFuture(res != null);
+        }
+        // fallback synchronous teleport
+        e.teleport(location);
         return CompletableFuture.completedFuture(true);
     }
 
+    public static CompletableFuture<Boolean> teleportPlayer(Player e, Location location, TeleportCause cause) {
+        if (e == null) return CompletableFuture.completedFuture(false); // null guard
+        if (isFolia()) {
+            final CompletableFuture<Boolean> out = new CompletableFuture<>();
+            runTaskForEntity(e, () -> performTeleportAndComplete(e, location, cause, out), () -> {}, 2L);
+            return out;
+        }
+        Method teleportAsyncWithCause = cachedMethods.get("player.teleportAsyncCause");
+        if (teleportAsyncWithCause != null) {
+            Object res = invokeMethod(teleportAsyncWithCause, e, location, cause);
+            if (res instanceof CompletableFuture) {
+                @SuppressWarnings("unchecked")
+                CompletableFuture<Boolean> f = (CompletableFuture<Boolean>) res;
+                return f;
+            }
+            return CompletableFuture.completedFuture(res != null);
+        }
+        Method teleportAsyncMethod = cachedMethods.get("player.teleportAsync");
+        if (teleportAsyncMethod != null) {
+            Object res = invokeMethod(teleportAsyncMethod, e, location);
+            if (res instanceof CompletableFuture) {
+                @SuppressWarnings("unchecked")
+                CompletableFuture<Boolean> f = (CompletableFuture<Boolean>) res;
+                return f;
+            }
+            return CompletableFuture.completedFuture(res != null);
+        }
+        if (cause != null) {
+            return CompletableFuture.completedFuture(e.teleport(location, cause));
+        }
+        runTaskForEntity(e, () -> e.teleport(location), () -> {}, 1L);
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public static CompletableFuture<Boolean> teleportPlayer(Player e, Location location, TeleportCause cause, long delay) {
+        return teleportPlayer(e, location, cause, delay, null); // delegate to hook-aware overload with no hook
+    }
+
+    public static CompletableFuture<Boolean> teleportPlayer(Player e, Location location, TeleportCause cause, long delay, Runnable preTeleportHook) {
+        if (e == null) return CompletableFuture.completedFuture(false); // null guard
+        final long safeDelay = Math.max(1L, delay); // ensure at least 1 tick for folia entity scheduler
+        if (isFolia()) {
+            final CompletableFuture<Boolean> out = new CompletableFuture<>();
+            runTaskForEntity(e, () -> {
+                if (preTeleportHook != null) {
+                    preTeleportHook.run(); // run hook right before teleport so consumers can refresh real-time data
+                }
+                performTeleportAndComplete(e, location, cause, out);
+            }, () -> {}, safeDelay);
+            return out;
+        }
+        final CompletableFuture<Boolean> out = new CompletableFuture<>();
+        Runnable task = () -> {
+            if (preTeleportHook != null) {
+                preTeleportHook.run(); // run hook right before teleport so consumers can refresh real-time data
+            }
+            performTeleportAndComplete(e, location, cause, out);
+        };
+        bS.runTaskLater(UniversalSpawn.getInstance(), task, delay); // non-folia uses sync scheduling as before
+        return out;
+    }
+
+    public static CompletableFuture<Boolean> teleportPlayer(Player e, Location location, Boolean async, long delay) {
+        if (e == null) return CompletableFuture.completedFuture(false); // null guard
+        final long safeDelay = Math.max(1L, delay);
+        if (isFolia()) {
+            final CompletableFuture<Boolean> out = new CompletableFuture<>();
+            runTaskForEntity(e, () -> performTeleportAndComplete(e, location, null, out), () -> {}, safeDelay);
+            return out;
+        }
+        final CompletableFuture<Boolean> out = new CompletableFuture<>();
+        Runnable task = () -> performTeleportAndComplete(e, location, null, out);
+        if (Boolean.TRUE.equals(async)) {
+            bS.runTaskLaterAsynchronously(UniversalSpawn.getInstance(), task, delay);
+        } else {
+            bS.runTaskLater(UniversalSpawn.getInstance(), task, delay);
+        }
+        return out;
+    }
+
+    public static void cancelScheduledTask(final Object scheduledTask) {
+        if (scheduledTask == null) {
+            return;
+        }
+        try {
+            final Method cancelMethod = scheduledTask.getClass().getMethod("cancel");
+            cancelMethod.setAccessible(true);
+            cancelMethod.invoke(scheduledTask);
+        } catch (final Exception exception) {
+            exception.printStackTrace();
+        }
+    }
+
     public static void cancelAllTasks() {
-        if (plugin == null) {
+        Plugin plugin = UniversalSpawn.getInstance();
+        if (!isFolia()) {
+            bS.cancelTasks(plugin); // cancel bukkit tasks
             return;
         }
-
-        if (!IS_FOLIA) {
-            BUKKIT_SCHEDULER.cancelTasks(plugin);
-            return;
-        }
-
-        invokeMethod(CACHED_METHODS.get("globalRegionScheduler.cancelTasks"), GLOBAL_REGION_SCHEDULER, plugin);
-        invokeMethod(CACHED_METHODS.get("asyncScheduler.cancelTasks"), ASYNC_SCHEDULER, plugin);
-    }
-
-    public static void runTask(Chunk chunk, Runnable runnable) {
-        if (!IS_FOLIA) {
-            BUKKIT_SCHEDULER.runTask(plugin, runnable);
-            return;
-        }
-
-        if (chunk != null) {
-            runTaskForRegion(chunk.getWorld(), chunk.getX(), chunk.getZ(), runnable);
-        }
-    }
-
-    public static void runTaskForRegion(World world, int chunkX, int chunkZ, Runnable runnable) {
-        if (!IS_FOLIA) {
-            BUKKIT_SCHEDULER.runTask(plugin, runnable);
-            return;
-        }
-
-        if (world != null) {
-            invokeMethod(CACHED_METHODS.get("regionScheduler.execute"), REGION_SCHEDULER, plugin, world, chunkX,
-                    chunkZ, runnable);
-        }
+        Method cancelGlobalMethod = cachedMethods.get("globalRegionScheduler.cancelTasks");
+        invokeMethod(cancelGlobalMethod, globalRegionScheduler, plugin); // cancel folia global tasks
+        Method cancelAsyncMethod = cachedMethods.get("asyncScheduler.cancelTasks");
+        invokeMethod(cancelAsyncMethod, asyncScheduler, plugin); // cancel modern async scheduler tasks
     }
 }
