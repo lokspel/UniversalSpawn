@@ -1,7 +1,6 @@
 # UniversalSpawn
 
 Simple global spawn plugin for Spigot, Paper and Folia servers.  
-Works on both Paper and Folia.
 
 ## Features
 
