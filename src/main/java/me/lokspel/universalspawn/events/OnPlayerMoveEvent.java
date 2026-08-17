@@ -18,12 +18,12 @@ public final class OnPlayerMoveEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
-        if (!plugin.getSettingsConfig().shouldTeleportOutOfVoid()) {
+        if (!plugin.getSettingsConfig().teleportOutOfVoid()) {
             return;
         }
 
         Player player = event.getPlayer();
-        if (player.getLocation().getBlockY() > plugin.getSettingsConfig().getVoidCheckHeight()) {
+        if (player.getLocation().getBlockY() > plugin.getSettingsConfig().voidCheckHeight()) {
             return;
         }
 

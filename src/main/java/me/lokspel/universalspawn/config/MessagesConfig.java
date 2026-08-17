@@ -10,31 +10,29 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 
 public final class MessagesConfig {
-    private final UniversalSpawn plugin;
-    private final MiniMessage miniMessage;
-    private FileConfiguration config;
+
+    private static final String NOT_FOUND = "<red>Message not found: %s</red>";
+
+    private final FileConfiguration config;
+    private final MiniMessage miniMessage = MiniMessage.miniMessage();
 
     public MessagesConfig(UniversalSpawn plugin) {
-        this.plugin = plugin;
-        this.miniMessage = MiniMessage.miniMessage();
-        load();
+        this.config = YamlConfiguration.loadConfiguration(loadFile(plugin));
     }
 
-    public void load() {
+    private static File loadFile(UniversalSpawn plugin) {
         File file = new File(plugin.getDataFolder(), "messages.yml");
         if (!file.exists()) {
             plugin.saveResource("messages.yml", false);
         }
-
-        config = YamlConfiguration.loadConfiguration(file);
+        return file;
     }
 
-    public Component getMessage(String path) {
-        String message = config.getString(path, "<red>Message not found: " + path + "</red>");
-        return miniMessage.deserialize(message);
+    public Component get(String key) {
+        return miniMessage.deserialize(config.getString(key, NOT_FOUND.formatted(key)));
     }
 
-    public void send(CommandSender sender, String path) {
-        sender.sendMessage(getMessage(path));
+    public void send(CommandSender sender, String key) {
+        sender.sendMessage(get(key));
     }
 }

@@ -1,110 +1,58 @@
 package me.lokspel.universalspawn.config;
 
 import me.lokspel.universalspawn.UniversalSpawn;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public final class SettingsConfig {
+
+    private static final String TELEPORT_ON_JOIN = "teleport-on-join.enabled";
+    private static final String TELEPORT_ON_DEATH = "teleport-on-death.enabled";
+    private static final String AUTO_RESPAWN = "teleport-on-death.auto-respawn";
+    private static final String AUTO_RESPAWN_DELAY = "teleport-on-death.respawn-delay-ticks";
+    private static final String AUTO_RESPAWN_RETRIES = "teleport-on-death.respawn-retries";
+    private static final String POST_RESPAWN_TELEPORT_DELAY = "teleport-on-death.post-respawn-teleport-delay";
+    private static final String TELEPORT_OUT_OF_VOID = "teleport-out-of-void.enabled";
+    private static final String VOID_CHECK_HEIGHT = "teleport-out-of-void.check-height";
+
     private final UniversalSpawn plugin;
-    private boolean teleportOnJoin;
-    private boolean teleportOnRespawn;
-    private boolean autoRespawn;
-    private boolean teleportOutOfVoid;
-    private int voidCheckHeight;
-    private long autoRespawnDelayTicks;
-    private int autoRespawnRetries;
-    private long postRespawnTeleportDelayTicks;
 
     public SettingsConfig(UniversalSpawn plugin) {
         this.plugin = plugin;
     }
 
-    public void load() {
-        FileConfiguration config = plugin.getConfig();
-        teleportOnJoin = config.getBoolean("teleport-on-join.enabled", true);
-        teleportOnRespawn = config.getBoolean("teleport-on-death.enabled", true);
-        autoRespawn = config.getBoolean("teleport-on-death.auto-respawn", true);
-        autoRespawnDelayTicks = Math.max(1L, config.getLong("teleport-on-death.respawn-delay-ticks", 2L));
-        autoRespawnRetries = Math.max(0, config.getInt("teleport-on-death.respawn-retries", 4));
-        postRespawnTeleportDelayTicks = Math.max(0L,
-                config.getLong("teleport-on-death.post-respawn-teleport-delay", 1L));
-        teleportOutOfVoid = config.getBoolean("teleport-out-of-void.enabled", true);
-        voidCheckHeight = config.getInt("teleport-out-of-void.check-height", 0);
+    private FileConfiguration config() {
+        return plugin.getConfig();
     }
 
-    public Location loadSpawnLocation() {
-        FileConfiguration config = plugin.getConfig();
-        String worldName = config.getString("spawn.world");
-        if (worldName == null || worldName.trim().isEmpty()) {
-            return null;
-        }
-
-        World world = plugin.getServer().getWorld(worldName);
-        if (world == null) {
-            plugin.getLogger().warning("Spawn world '" + worldName + "' was not found.");
-            return null;
-        }
-
-        return new Location(
-                world,
-                config.getDouble("spawn.x"),
-                config.getDouble("spawn.y"),
-                config.getDouble("spawn.z"),
-                (float) config.getDouble("spawn.yaw"),
-                (float) config.getDouble("spawn.pitch")
-        );
+    public boolean teleportOnJoin() {
+        return config().getBoolean(TELEPORT_ON_JOIN, true);
     }
 
-    public void saveSpawnLocation(Location location) {
-        FileConfiguration config = plugin.getConfig();
-        if (location == null || location.getWorld() == null) {
-            config.set("spawn.world", null);
-            config.set("spawn.x", null);
-            config.set("spawn.y", null);
-            config.set("spawn.z", null);
-            config.set("spawn.yaw", null);
-            config.set("spawn.pitch", null);
-        } else {
-            config.set("spawn.world", location.getWorld().getName());
-            config.set("spawn.x", location.getX());
-            config.set("spawn.y", location.getY());
-            config.set("spawn.z", location.getZ());
-            config.set("spawn.yaw", location.getYaw());
-            config.set("spawn.pitch", location.getPitch());
-        }
-        plugin.saveConfig();
+    public boolean teleportOnRespawn() {
+        return config().getBoolean(TELEPORT_ON_DEATH, true);
     }
 
-    public boolean shouldTeleportOnJoin() {
-        return teleportOnJoin;
+    public boolean autoRespawn() {
+        return config().getBoolean(AUTO_RESPAWN, true);
     }
 
-    public boolean shouldSkipTeleportOnRespawn() {
-        return !teleportOnRespawn;
+    public long respawnDelayTicks() {
+        return Math.max(1L, config().getLong(AUTO_RESPAWN_DELAY, 2L));
     }
 
-    public boolean shouldAutoRespawn() {
-        return autoRespawn;
+    public int respawnRetries() {
+        return Math.max(0, config().getInt(AUTO_RESPAWN_RETRIES, 4));
     }
 
-    public boolean shouldTeleportOutOfVoid() {
-        return teleportOutOfVoid;
+    public long postRespawnTeleportDelayTicks() {
+        return Math.max(0L, config().getLong(POST_RESPAWN_TELEPORT_DELAY, 1L));
     }
 
-    public int getVoidCheckHeight() {
-        return voidCheckHeight;
+    public boolean teleportOutOfVoid() {
+        return config().getBoolean(TELEPORT_OUT_OF_VOID, true);
     }
 
-    public long getAutoRespawnDelayTicks() {
-        return autoRespawnDelayTicks;
-    }
-
-    public int getAutoRespawnRetries() {
-        return autoRespawnRetries;
-    }
-
-    public long getPostRespawnTeleportDelayTicks() {
-        return postRespawnTeleportDelayTicks;
+    public int voidCheckHeight() {
+        return config().getInt(VOID_CHECK_HEIGHT, 0);
     }
 }

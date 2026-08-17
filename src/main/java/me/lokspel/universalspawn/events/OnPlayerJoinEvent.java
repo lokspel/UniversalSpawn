@@ -16,7 +16,7 @@ public final class OnPlayerJoinEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        if (!plugin.getSettingsConfig().shouldTeleportOnJoin()) {
+        if (!plugin.getSettingsConfig().teleportOnJoin()) {
             return;
         }
 

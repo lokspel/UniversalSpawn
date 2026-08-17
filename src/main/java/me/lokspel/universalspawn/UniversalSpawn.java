@@ -26,10 +26,9 @@ public final class UniversalSpawn extends JavaPlugin {
         reloadConfig();
 
         settingsConfig = new SettingsConfig(this);
-        settingsConfig.load();
         messagesConfig = new MessagesConfig(this);
-        spawnLocation = new SpawnLocation(this);
 
+        spawnLocation = new SpawnLocation(this);
         spawnLocation.load();
 
         getCommand("spawn").setExecutor(new SpawnCommand(this));
@@ -49,15 +48,15 @@ public final class UniversalSpawn extends JavaPlugin {
         return instance;
     }
 
-    public SpawnLocation getSpawnLocation() {
-        return spawnLocation;
-    }
-
     public SettingsConfig getSettingsConfig() {
         return settingsConfig;
     }
 
     public MessagesConfig getMessagesConfig() {
         return messagesConfig;
+    }
+
+    public SpawnLocation getSpawnLocation() {
+        return spawnLocation;
     }
 }

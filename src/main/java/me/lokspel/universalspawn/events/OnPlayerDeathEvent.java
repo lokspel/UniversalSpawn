@@ -17,11 +17,11 @@ public final class OnPlayerDeathEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        if (plugin.getSettingsConfig().shouldSkipTeleportOnRespawn()) {
+        if (!plugin.getSettingsConfig().teleportOnRespawn()) {
             return;
         }
 
-        if (!plugin.getSettingsConfig().shouldAutoRespawn()) {
+        if (!plugin.getSettingsConfig().autoRespawn()) {
             return;
         }
 
@@ -29,7 +29,7 @@ public final class OnPlayerDeathEvent implements Listener {
             return;
         }
 
-        attemptRespawn(event.getEntity(), plugin.getSettingsConfig().getAutoRespawnRetries());
+        attemptRespawn(event.getEntity(), plugin.getSettingsConfig().respawnRetries());
     }
 
     private void attemptRespawn(Player player, int retriesLeft) {
@@ -51,6 +51,6 @@ public final class OnPlayerDeathEvent implements Listener {
                 attemptRespawn(player, retriesLeft - 1);
             }
         }, () -> {
-        }, plugin.getSettingsConfig().getAutoRespawnDelayTicks());
+        }, plugin.getSettingsConfig().respawnDelayTicks());
     }
 }

@@ -17,7 +17,7 @@ public final class OnPlayerRespawnEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
-        if (plugin.getSettingsConfig().shouldSkipTeleportOnRespawn()) {
+        if (!plugin.getSettingsConfig().teleportOnRespawn()) {
             return;
         }
 
@@ -34,6 +34,6 @@ public final class OnPlayerRespawnEvent implements Listener {
 
             FoliaAPI.teleportPlayer(event.getPlayer(), spawnLocation, true);
         }, () -> {
-        }, plugin.getSettingsConfig().getPostRespawnTeleportDelayTicks());
+        }, plugin.getSettingsConfig().postRespawnTeleportDelayTicks());
     }
 }
