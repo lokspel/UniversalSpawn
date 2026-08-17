@@ -3,6 +3,7 @@ package me.lokspel.universalspawn.config;
 import me.lokspel.universalspawn.UniversalSpawn;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -12,6 +13,7 @@ import java.io.File;
 public final class MessagesConfig {
 
     private static final String NOT_FOUND = "<red>Message not found: %s</red>";
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
 
     private final FileConfiguration config;
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
@@ -33,6 +35,6 @@ public final class MessagesConfig {
     }
 
     public void send(CommandSender sender, String key) {
-        sender.sendMessage(get(key));
+        sender.sendMessage(LEGACY.serialize(get(key)));
     }
 }
