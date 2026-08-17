@@ -15,7 +15,8 @@ Works on both Paper and Folia.
 ## Requirements
 
 - Java 21
-- Paper `1.21.11` API or compatible server
+- Spigot, Paper, or Folia server
+- Minecraft `1.21.11`, `26.1`, or `26.2`
 
 ## Build
 
