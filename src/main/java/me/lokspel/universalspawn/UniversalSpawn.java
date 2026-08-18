@@ -10,6 +10,7 @@ import me.lokspel.universalspawn.events.OnPlayerRespawnEvent;
 import me.lokspel.universalspawn.utils.FoliaAPI;
 import me.lokspel.universalspawn.world.SpawnLocation;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bstats.bukkit.Metrics;
 
 public final class UniversalSpawn extends JavaPlugin {
     private static UniversalSpawn instance;
@@ -21,6 +22,8 @@ public final class UniversalSpawn extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+
+        new Metrics(this, 33443);
 
         saveDefaultConfig();
         reloadConfig();

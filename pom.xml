@@ -6,7 +6,7 @@
 
     <groupId>me.miko</groupId>
     <artifactId>universalspawn</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
 
     <name>UniversalSpawn</name>
@@ -50,6 +50,10 @@
                                 <relocation>
                                     <pattern>net.kyori.adventure</pattern>
                                     <shadedPattern>me.lokspel.universalspawn.thirdparty.adventure</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.bstats</pattern>
+                                    <shadedPattern>me.lokspel.universalspawn.thirdparty</shadedPattern>
                                 </relocation>
                             </relocations>
                             <filters>
@@ -98,6 +102,11 @@
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-serializer-legacy</artifactId>
             <version>5.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.2.1</version>
         </dependency>
     </dependencies>
 </project>
