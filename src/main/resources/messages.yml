@@ -1,7 +1,4 @@
-# UniversalSpawn Messages
-# Format: MiniMessage
-
-# Prefix prepended to every message sent via prefixed()
+# Uses MiniMessage format: https://docs.advntr.dev/minimessage/
 prefix: "<gold>[UniversalSpawn]</gold> "
 
 # Admin
