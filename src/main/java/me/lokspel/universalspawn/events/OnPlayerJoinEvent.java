@@ -1,7 +1,6 @@
 package me.lokspel.universalspawn.events;
 
 import me.lokspel.universalspawn.UniversalSpawn;
-import me.lokspel.universalspawn.utils.FoliaAPI;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -16,7 +15,7 @@ public final class OnPlayerJoinEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        if (!plugin.getSettingsConfig().teleportOnJoin()) {
+        if (!plugin.getMainConfig().join().enabled()) {
             return;
         }
 
@@ -24,10 +23,7 @@ public final class OnPlayerJoinEvent implements Listener {
             return;
         }
 
-        FoliaAPI.runTaskLater(() -> FoliaAPI.teleportPlayer(
-                event.getPlayer(),
-                plugin.getSpawnLocation().getLocation(),
-                true
-        ), 1L);
+        plugin.getFoliaLib().getScheduler().runLater(() -> plugin.getFoliaLib().getScheduler()
+                .teleportAsync(event.getPlayer(), plugin.getSpawnLocation().getLocation()), 1L);
     }
 }

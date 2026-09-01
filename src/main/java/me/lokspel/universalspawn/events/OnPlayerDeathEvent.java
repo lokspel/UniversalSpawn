@@ -1,7 +1,6 @@
 package me.lokspel.universalspawn.events;
 
 import me.lokspel.universalspawn.UniversalSpawn;
-import me.lokspel.universalspawn.utils.FoliaAPI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,11 +16,11 @@ public final class OnPlayerDeathEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        if (!plugin.getSettingsConfig().teleportOnRespawn()) {
+        if (!plugin.getMainConfig().death().enabled()) {
             return;
         }
 
-        if (!plugin.getSettingsConfig().autoRespawn()) {
+        if (!plugin.getMainConfig().death().autoRespawn()) {
             return;
         }
 
@@ -29,7 +28,7 @@ public final class OnPlayerDeathEvent implements Listener {
             return;
         }
 
-        attemptRespawn(event.getEntity(), plugin.getSettingsConfig().respawnRetries());
+        attemptRespawn(event.getEntity(), plugin.getMainConfig().death().respawnRetries());
     }
 
     private void attemptRespawn(Player player, int retriesLeft) {
@@ -37,20 +36,25 @@ public final class OnPlayerDeathEvent implements Listener {
             return;
         }
 
-        FoliaAPI.runTaskForEntity(player, () -> {
-            if (!player.isDead()) {
-                return;
-            }
+        plugin.getFoliaLib().getScheduler().runAtEntityLater(
+                player,
+                () -> {
+                    if (!player.isDead()) {
+                        return;
+                    }
 
-            try {
-                player.spigot().respawn();
-            } catch (Exception ignored) {
-            }
+                    try {
+                        player.spigot().respawn();
+                    } catch (Exception ignored) {
+                    }
 
-            if (player.isDead() && retriesLeft > 0) {
-                attemptRespawn(player, retriesLeft - 1);
-            }
-        }, () -> {
-        }, plugin.getSettingsConfig().respawnDelayTicks());
+                    if (player.isDead() && retriesLeft > 0) {
+                        attemptRespawn(player, retriesLeft - 1);
+                    }
+                },
+                () -> {
+                },
+                plugin.getMainConfig().death().respawnDelayTicks()
+        );
     }
 }

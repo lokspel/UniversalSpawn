@@ -1,7 +1,6 @@
 package me.lokspel.universalspawn.events;
 
 import me.lokspel.universalspawn.UniversalSpawn;
-import me.lokspel.universalspawn.utils.FoliaAPI;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,7 +16,7 @@ public final class OnPlayerRespawnEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
-        if (!plugin.getSettingsConfig().teleportOnRespawn()) {
+        if (!plugin.getMainConfig().death().enabled()) {
             return;
         }
 
@@ -27,13 +26,18 @@ public final class OnPlayerRespawnEvent implements Listener {
         }
 
         event.setRespawnLocation(spawnLocation);
-        FoliaAPI.runTaskForEntity(event.getPlayer(), () -> {
-            if (!event.getPlayer().isOnline()) {
-                return;
-            }
+        plugin.getFoliaLib().getScheduler().runAtEntityLater(
+                event.getPlayer(),
+                () -> {
+                    if (!event.getPlayer().isOnline()) {
+                        return;
+                    }
 
-            FoliaAPI.teleportPlayer(event.getPlayer(), spawnLocation, true);
-        }, () -> {
-        }, plugin.getSettingsConfig().postRespawnTeleportDelayTicks());
+                    plugin.getFoliaLib().getScheduler().teleportAsync(event.getPlayer(), spawnLocation);
+                },
+                () -> {
+                },
+                plugin.getMainConfig().death().postRespawnTeleportDelayTicks()
+        );
     }
 }

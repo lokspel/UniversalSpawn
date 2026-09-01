@@ -1,40 +1,47 @@
 package me.lokspel.universalspawn;
 
-import me.lokspel.universalspawn.config.MessagesConfig;
-import me.lokspel.universalspawn.config.SettingsConfig;
+import me.lokspel.universalspawn.commands.CommandDispatcher;
+import me.lokspel.universalspawn.commands.CommandDispatcher.RegisteredCommand;
+import me.lokspel.universalspawn.commands.SetSpawnCommand;
 import me.lokspel.universalspawn.commands.SpawnCommand;
+import me.lokspel.universalspawn.config.MainConfig;
 import me.lokspel.universalspawn.events.OnPlayerDeathEvent;
 import me.lokspel.universalspawn.events.OnPlayerJoinEvent;
 import me.lokspel.universalspawn.events.OnPlayerMoveEvent;
 import me.lokspel.universalspawn.events.OnPlayerRespawnEvent;
-import me.lokspel.universalspawn.utils.FoliaAPI;
 import me.lokspel.universalspawn.world.SpawnLocation;
+import com.tcoded.folialib.FoliaLib;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bstats.bukkit.Metrics;
 
-public final class UniversalSpawn extends JavaPlugin {
-    private static UniversalSpawn instance;
+import java.util.List;
+import java.util.Objects;
 
-    private SettingsConfig settingsConfig;
-    private MessagesConfig messagesConfig;
+public final class UniversalSpawn extends JavaPlugin {
+
+    private MainConfig mainConfig;
     private SpawnLocation spawnLocation;
+    private FoliaLib foliaLib;
 
     @Override
     public void onEnable() {
-        instance = this;
 
         new Metrics(this, 33443);
 
-        saveDefaultConfig();
-        reloadConfig();
+        mainConfig = new MainConfig(this);
 
-        settingsConfig = new SettingsConfig(this);
-        messagesConfig = new MessagesConfig(this);
+        foliaLib = new FoliaLib(this);
 
         spawnLocation = new SpawnLocation(this);
         spawnLocation.load();
 
-        getCommand("spawn").setExecutor(new SpawnCommand(this));
+        CommandDispatcher dispatcher = new CommandDispatcher(mainConfig, List.of(
+                new RegisteredCommand("set", new SetSpawnCommand(this))
+        ), new SpawnCommand(this));
+        var spawnCmd = Objects.requireNonNull(getCommand("spawn"));
+        spawnCmd.setExecutor(dispatcher);
+        spawnCmd.setTabCompleter(dispatcher);
+
         getServer().getPluginManager().registerEvents(new OnPlayerDeathEvent(this), this);
         getServer().getPluginManager().registerEvents(new OnPlayerJoinEvent(this), this);
         getServer().getPluginManager().registerEvents(new OnPlayerMoveEvent(this), this);
@@ -43,23 +50,20 @@ public final class UniversalSpawn extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        FoliaAPI.cancelAllTasks();
-        instance = null;
+        if (foliaLib != null) {
+            foliaLib.getScheduler().cancelAllTasks();
+        }
     }
 
-    public static UniversalSpawn getInstance() {
-        return instance;
-    }
-
-    public SettingsConfig getSettingsConfig() {
-        return settingsConfig;
-    }
-
-    public MessagesConfig getMessagesConfig() {
-        return messagesConfig;
+    public MainConfig getMainConfig() {
+        return mainConfig;
     }
 
     public SpawnLocation getSpawnLocation() {
         return spawnLocation;
+    }
+
+    public FoliaLib getFoliaLib() {
+        return foliaLib;
     }
 }

@@ -5,12 +5,12 @@ import me.lokspel.universalspawn.config.MessagesConfig;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public final class SpawnCommand implements SubCommand {
+public final class SetSpawnCommand implements SubCommand {
 
     private final UniversalSpawn plugin;
     private final MessagesConfig messages;
 
-    public SpawnCommand(UniversalSpawn plugin) {
+    public SetSpawnCommand(UniversalSpawn plugin) {
         this.plugin = plugin;
         this.messages = plugin.getMainConfig().messages();
     }
@@ -22,18 +22,14 @@ public final class SpawnCommand implements SubCommand {
             return true;
         }
 
-        if (!player.hasPermission("universalspawn.spawn.use")) {
-            messages.send(player, "no-spawn-permission");
+        if (!player.hasPermission("universalspawn.spawn.set")) {
+            messages.send(player, "no-permission");
             return true;
         }
 
-        if (plugin.getSpawnLocation().getLocation() == null) {
-            messages.send(player, "spawn-missing");
-            return true;
-        }
-
-        plugin.getFoliaLib().getScheduler().teleportAsync(player, plugin.getSpawnLocation().getLocation())
-                .whenComplete((ok, ex) -> messages.send(player, "spawn-teleported"));
+        plugin.getSpawnLocation().setLocation(player.getLocation());
+        plugin.getSpawnLocation().save(player.getLocation());
+        messages.send(player, "spawn-set");
         return true;
     }
 }

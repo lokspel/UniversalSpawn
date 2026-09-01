@@ -1,6 +1,19 @@
-only-player: "<red>Only players can use this command.</red>"
-no-permission: "<red>You do not have permission to use this command.</red>"
-no-spawn-permission: "<red>You do not have permission to use /spawn.</red>"
-spawn-set: "<green>Spawn location has been set.</green>"
-spawn-teleported: "<green>You were teleported to spawn.</green>"
+# UniversalSpawn Messages
+# Format: MiniMessage
+
+# Prefix prepended to every message sent via prefixed()
+prefix: "<gold>[UniversalSpawn]</gold> "
+
+# Admin
+spawn-set: "%prefix%<green>Spawn location has been set.</green>"
+config-reloaded: "%prefix%<green>Configuration reloaded successfully.</green>"
+
+# Command Errors
+usage: "%prefix%<red>Usage: /spawn [set]</red>"
+player-only: "<red>Only players can use this command.</red>"
+no-permission: "<red>You don't have permission to use this command.</red>"
+no-spawn-permission: "<red>You don't have permission to use /spawn.</red>"
 spawn-missing: "<red>Spawn location is not configured.</red>"
+
+# Teleport
+spawn-teleported: "%prefix%<green>You were teleported to spawn.</green>"

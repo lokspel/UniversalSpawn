@@ -1,7 +1,6 @@
 package me.lokspel.universalspawn.events;
 
 import me.lokspel.universalspawn.UniversalSpawn;
-import me.lokspel.universalspawn.utils.FoliaAPI;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,21 +17,23 @@ public final class OnPlayerMoveEvent implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
-        if (!plugin.getSettingsConfig().teleportOutOfVoid()) {
+        if (!plugin.getMainConfig().voidSection().enabled()) {
             return;
         }
 
         Player player = event.getPlayer();
-        if (player.getLocation().getBlockY() > plugin.getSettingsConfig().voidCheckHeight()) {
+        if (player.getLocation().getBlockY() > plugin.getMainConfig().voidSection().checkHeight()) {
             return;
         }
 
         Location spawnLocation = plugin.getSpawnLocation().getLocation();
-        if (spawnLocation == null || !spawnLocation.getWorld().equals(player.getWorld())) {
+        if (spawnLocation == null
+                || spawnLocation.getWorld() == null
+                || !spawnLocation.getWorld().equals(player.getWorld())) {
             return;
         }
 
-        FoliaAPI.teleportPlayer(player, spawnLocation, true);
+        plugin.getFoliaLib().getScheduler().teleportAsync(player, spawnLocation);
         event.setCancelled(true);
     }
 }
