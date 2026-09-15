@@ -6,12 +6,6 @@ Simple global spawn plugin for Spigot, Paper and Folia
 
 UniversalSpawn provides a simple global spawn system for Minecraft servers. Players can teleport to a configured spawn, automatically teleport there when joining, and return to it after respawning. Includes void protection and MiniMessage-formatted messages.
 
-## » Requirements
-
-- **Java 21**
-- **Spigot, Paper, or Folia**
-- **Minecraft `1.21.11`, `26.1`, or `26.2`**
-
 ## » Installation
 
 1. Install a compatible Spigot, Paper, or Folia server
