@@ -42,16 +42,6 @@ UniversalSpawn provides a simple global spawn system for Minecraft servers. Play
 - Void protection
 - MiniMessage support
 
-## » How it works
-
-- The global spawn is saved when an authorized player runs `/spawn set`
-- Players with the appropriate permission can use `/spawn` to teleport to the saved location
-- Players are automatically sent to the global spawn when they join
-- Players are automatically sent to the global spawn after respawning
-- Void protection prevents players from falling indefinitely
-- Messages support MiniMessage formatting
-- The plugin is compatible with Folia and declares `folia-supported: true`
-
 ## » Build
 
 ```bash
