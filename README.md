@@ -1,44 +1,58 @@
 # UniversalSpawn
 
-Simple global spawn plugin for Spigot, Paper and Folia servers.  
+Simple global spawn plugin for Spigot, Paper and Folia
 
-## Features
+## » About
 
-- `/spawn` teleport command
-- `/spawn set` to save the global spawn
-- Teleport on join
-- Teleport on respawn
-- Void protection
-- MiniMessage support
+UniversalSpawn provides a simple global spawn system for Minecraft servers. Players can teleport to a configured spawn, automatically teleport there when joining, and return to it after respawning. Includes void protection and MiniMessage-formatted messages.
 
-## Requirements
+## » Requirements
 
-- Java 21
-- Spigot, Paper, or Folia server
-- Minecraft `1.21.11`, `26.1`, or `26.2`
+- **Java 21**
+- **Spigot, Paper, or Folia**
+- **Minecraft `1.21.11`, `26.1`, or `26.2`**
 
-## Build
+## » Installation
 
-```bash
-mvn clean package
-```
+1. Install a compatible Spigot, Paper, or Folia server
+2. Drop `UniversalSpawn.jar` into your `plugins/` folder
+3. Restart the server
+4. Run `/spawn set` to configure the global spawn
 
-## Commands
+## » Commands
 
 | Command | Description | Permission |
 | --- | --- | --- |
 | `/spawn` | Teleport to the saved spawn | `universalspawn.spawn.use` |
 | `/spawn set` | Save your current location as spawn | `universalspawn.spawn.set` |
 
-## Permissions
+## » Permissions
 
 | Permission | Default | Description |
 | --- | --- | --- |
 | `universalspawn.spawn.use` | `true` | Allows players to use `/spawn` |
 | `universalspawn.spawn.set` | `op` | Allows players to use `/spawn set` |
 
-## Notes
+## » Features
 
-- Spawn is considered missing until an admin runs `/spawn set`.
-- Messages use MiniMessage formatting.
-- The plugin declares `folia-supported: true`.
+- Global `/spawn` teleport command
+- `/spawn set` to save the global spawn
+- Teleport players to spawn on join
+- Teleport players to spawn on respawn
+- Void protection
+- MiniMessage support
+
+## » How it works
+
+- The global spawn is saved when an authorized player runs `/spawn set`
+- Players with the appropriate permission can use `/spawn` to teleport to the saved location
+- Players are automatically sent to the global spawn when they join
+- Players are automatically sent to the global spawn after respawning
+- Void protection prevents players from falling indefinitely
+- Messages support MiniMessage formatting
+- The plugin is compatible with Folia and declares `folia-supported: true`
+
+## » Build
+
+```bash
+mvn clean package
